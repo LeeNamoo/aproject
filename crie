@@ -1,0 +1,50 @@
+import pandas as pd
+import pymysql
+
+conn = pymysql.connect(host='localhost', user='root', password='akslfkeh', db='project_v1')
+curs = conn.cursor(pymysql.cursors.DictCursor)
+print("project_v1에 들어왔습니다")
+
+
+curs.execute("SELECT date, code FROM `median_value`")
+rows=curs.fetchall()
+print(rows)
+
+
+
+for x in range(len(rows)):
+    data = rows[x]
+    keys = list(data.values())
+    print(keys[0])
+    print(keys[1])
+
+
+    sql = 'SELECT close, open, high, low, clo20, clo60, clo120, clo240 FROM daily_buy_list.%s where code = %s'
+    curs.execute(sql,(keys[0],keys[1]))
+    result = curs.fetchall()
+
+    if len(result)==1:
+
+        a = []
+        for i in result[0].values():
+            a.append(i)
+            print(i)
+
+        sql = 'SET SQL_SAFE_UPDATES = 0'
+        curs.execute(sql)
+
+        sql = 'UPDATE median_value SET close = %s, open = %s, high = %s, low = %s, clo20 = %s, clo60 = %s, clo120 = %s, clo240 = %s WHERE date = %s and code = %s'
+        curs.execute(sql,(a[0],a[1],a[2],a[3],a[4],a[5],a[6],a[7],keys[0],keys[1]))
+
+        conn.commit()
+
+    else:
+        sql = 'SET SQL_SAFE_UPDATES = 0'
+        curs.execute(sql)
+
+        conn.commit()
+
+
+#종료
+curs.close()
+conn.close()
